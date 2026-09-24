@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a5276">
+<title>GA TECH LAB - Laboratory Management System</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root { --brand:#1a5276; --accent:#e67e22; --bg:#f0f2f5; }
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
+body { background:var(--bg); }
+button { cursor:pointer; }
+
+/* LOGIN */
+#loginScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#154360,#1a5276); }
+.login-box { background:#fff; padding:36px 42px; border-radius:14px; width:360px; box-shadow:0 10px 40px rgba(0,0,0,.3); text-align:center; }
+.login-box h1 { color:var(--brand); font-size:24px; }
+.login-box p { color:#888; font-size:13px; margin:4px 0 22px; }
+.login-box input { width:100%; padding:11px 14px; margin:7px 0; border:1px solid #ccc; border-radius:8px; font-size:14px; }
+.login-box button { width:100%; padding:12px; margin-top:14px; background:var(--brand); color:#fff; border:0; border-radius:8px; font-size:15px; }
+.login-box .login-hint { color:#aaa; font-size:12px; margin-top:14px; }
+.top-btn { position:fixed; top:14px; right:14px; z-index:50; background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); padding:7px 14px; border-radius:8px; font-size:12px; }
+
+/* SHELL */
+#app { display:none; }
+.sidebar { position:fixed; left:0; top:0; bottom:0; width:220px; background:#154360; padding-top:16px; overflow-y:auto; }
+.sidebar .logo { color:#fff; font-weight:700; font-size:17px; text-align:center; padding:4px 12px 14px; border-bottom:1px solid rgba(255,255,255,.15); }
+.sidebar .logo small { display:block; font-weight:400; font-size:10px; color:#aed6f1; margin-top:3px; }
+.sidebar a { display:block; color:#d6eaf8; text-decoration:none; padding:10px 20px; font-size:13.5px; cursor:pointer; }
+.sidebar a:hover, .sidebar a.active { background:#1f618d; color:#fff; }
+.sidebar .logout { position:sticky; top:100vh; margin-top:24px; color:#f1948a !important; }
+.main { margin-left:220px; padding:24px 30px; }
+.page { display:none; }
+.page.active { display:block; }
+h2.page-title { color:var(--brand); margin-bottom:18px; font-size:22px; }
+h3.sec { color:var(--brand); margin:22px 0 10px; font-size:16px; }
+
+/* CARDS */
+.cards { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+.card { flex:1; min-width:190px; background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); border-left:5px solid var(--brand); }
+.card .num { font-size:26px; font-weight:700; color:#222; }
+.card .lbl { color:#888; font-size:12.5px; margin-top:4px; }
+.c1{border-color:#2980b9}.c2{border-color:#27ae60}.c3{border-color:var(--accent)}.c4{border-color:#8e44ad}
+
+/* PANELS */
+.panel { background:#fff; border-radius:12px; padding:22px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:18px; }
+label { display:block; font-size:13px; color:#555; margin:12px 0 4px; font-weight:600; }
+input, select, textarea { width:100%; max-width:430px; padding:9px 12px; border:1px solid #ccc; border-radius:7px; font-size:14px; }
+.btn { display:inline-block; background:var(--brand); color:#fff; border:0; padding:11px 26px; border-radius:8px; font-size:14px; margin-top:14px; }
+.btn:hover { background:#1f6fa5; }
+.btn.green { background:#27ae60; } .btn.green:hover { background:#2ecc71; }
+.btn.small { padding:6px 14px; font-size:12px; margin-top:0; }
+
+table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+th { background:var(--brand); color:#fff; text-align:left; padding:10px 14px; font-size:12.5px; }
+td { padding:9px 14px; font-size:13px; border-bottom:1px solid #eee; color:#333; }
+tr:nth-child(even) td { background:#fafbfc; }
+.badge { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge.pending { background:#fdebd0; color:#b9770e; }
+.badge.paid, .badge.completed { background:#d5f5e3; color:#1e8449; }
+
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0 40px; }
+.find-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.find-row input { max-width:270px; }
+.muted { color:#888; font-size:13px; }
+.rel { position:relative; }
+.mr-suggest { border:1px solid #ccc; border-radius:7px; max-height:190px; overflow:auto; width:270px; background:#fff; position:absolute; top:42px; left:0; z-index:9; box-shadow:0 6px 20px rgba(0,0,0,.15); }
+.mr-suggest div { padding:9px 12px; font-size:13px; cursor:pointer; }
+.mr-suggest div:hover { background:#eaf2f8; }
+
+/* test catalogue */
+.cat-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.cat-tab { padding:7px 16px; border-radius:20px; border:1px solid #ccc; background:#fff; font-size:13px; }
+.cat-tab.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+.test-check { display:block; background:#f8f9fa; border:1px solid #e5e8ec; border-radius:8px; padding:10px 14px; margin:7px 0; max-width:430px; cursor:pointer; }
+.test-check:hover { border-color:var(--accent); }
+.test-check .price { float:right; color:var(--accent); font-weight:700; }
+.total-bar { font-size:17px; font-weight:700; color:var(--brand); margin-top:14px; }
+.sel-count { background:#27ae60; color:#fff; border-radius:15px; padding:2px 10px; font-size:12px; margin-left:8px; }
+
+/* result entry */
+.result-row { display:flex; align-items:center; gap:12px; padding:6px 0; border-bottom:1px dashed #eee; }
+.result-row .tname { flex:1; font-size:14px; }
+.result-row .trange { color:#999; font-size:12px; width:160px; }
+.result-row .tunit { color:#777; font-size:12px; width:80px; }
+.result-row input { width:110px; max-width:110px; }
+.flag-h { color:#c0392b; font-weight:700; font-size:12px; width:60px; }
+.flag-l { color:#2471a3; font-weight:700; font-size:12px; width:60px; }
+.section-h { font-weight:700; color:var(--brand); margin:14px 0 4px; font-size:14px; }
+.quick-patient { display:inline-block; background:#eaf2f8; border-radius:7px; padding:8px 14px; margin:4px 6px 0 0; font-size:13px; cursor:pointer; }
+.quick-patient:hover { background:#d6eaf8; }
+
+.toast { position:fixed; bottom:22px; right:22px; background:#1e8449; color:#fff; padding:13px 20px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,.3); display:none; font-size:14px; z-index:99; }
+@media (max-width:820px) {
+  .sidebar { position:static; width:100%; height:auto; display:flex; flex-wrap:wrap; padding:8px; }
+  .sidebar .logo { border:0; width:100%; }
+  .sidebar a { padding:8px 12px; font-size:12px; }
+  .sidebar .logout { position:static; margin:0; width:100%; text-align:center; }
+  .main { margin-left:0; padding:14px; }
+}
+
+/* ---------- PRINT REPORT (A4) ---------- */
+#printArea { display:none; }
+@media print {
+  body * { visibility:hidden !important; }
+  #printArea, #printArea * { visibility:visible !important; }
+  #printArea { display:block; position:absolute; top:0; left:0; width:100%; background:#fff; }
+}
+.rep { width:190mm; margin:0 auto; font-size:10.5pt; color:#111; font-family:'Segoe UI',Arial,sans-serif; }
+.rep-head { border-bottom:3px solid var(--accent); padding-bottom:8px; margin-bottom:10px; }
+.rep-head h1 { color:var(--brand); font-size:20pt; }
+.rep-head .sub { font-size:10pt; color:#555; }
+.rep-info { display:flex; justify-content:space-between; gap:14px; font-size:9.5pt; margin-bottom:10px; }
+.rep-info div { width:50%; }
+.rep-info b { display:inline-block; min-width:90px; }
+.rep hr { border:0; border-top:1.5px solid #111; margin:8px 0; }
+.rep-title { text-align:center; font-weight:700; font-size:13pt; margin:8px 0; letter-spacing:1px; }
+.rep table { width:100%; border-collapse:collapse; box-shadow:none; border-radius:0; }
+.rep th { background:#111 !important; color:#fff; padding:5px 8px; font-size:9.5pt; text-align:left; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.rep td { border-bottom:1px solid #ddd; padding:4.5px 8px; font-size:9.5pt; background:#fff; }
+.rep tr:nth-child(even) td { background:#f7f7f7; }
+.rep .secrow td { background:#e8e8e8 !important; font-weight:700; }
+.rep .hl { color:#c0392b; font-weight:700; }
+.rep .ll { color:#2471a3; font-weight:700; }
+.rep-foot { text-align:center; font-size:8pt; color:#555; font-style:italic; margin-top:12px; }
+.rep-docs { display:flex; justify-content:space-around; margin-top:26px; text-align:center; font-size:9.5pt; }
+.rep-docs b { display:block; }
+.rep-docs span { color:#666; font-size:8.5pt; }
+.rep-bottom { border-top:3px solid var(--accent); margin-top:14px; padding-top:5px; text-align:center; font-size:9pt; color:#444; }
+</style>
+</head>
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<div id="loginScreen">
+  <button class="top-btn" onclick="installApp()">📲 Install App (Offline)</button>
+  <div class="login-box">
+    <h1>🧬 GA TECH LAB</h1>
+    <p>Digital Laboratory Management System</p>
+    <input id="li-user" placeholder="Username" value="admin">
+    <input id="li-pass" type="password" placeholder="Password">
+    <button onclick="doLogin()">Login</button>
+    <div class="login-hint">Default login: admin / admin123</div>
+  </div>
+</div>
+
+<!-- ======================= APP ======================= -->
+<div id="app">
+  <div class="sidebar">
+    <div class="logo">GA TECH LAB<small>Lab Management System</small></div>
+    <a class="active" data-page="dashboard">📊 Dashboard</a>
+    <a data-page="neworder">➕ New Patient + Order</a>
+    <a data-page="existing">🧑 Existing Patient Order</a>
+    <a data-page="results">📝 Result Entry</a>
+    <a data-page="reports">📄 Reports & Print</a>
+    <a data-page="history">🕘 Patient History</a>
+    <a data-page="billing">💳 Billing</a>
+    <a data-page="tests">🧪 Test Prices</a>
+    <a data-page="backup">💾 Backup / Restore</a>
+    <a data-page="settings">⚙️ Settings</a>
+    <a class="logout" onclick="logout()">⏻ Logout</a>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <h2 class="page-title">Dashboard</h2>
+      <div class="cards">
+        <div class="card c1"><div class="num" id="d-total">0</div><div class="lbl">Total Patients</div></div>
+        <div class="card c2"><div class="num" id="d-today">0</div><div class="lbl">Today's Patients</div></div>
+        <div class="card c3"><div class="num" id="d-pending">0</div><div class="lbl">Pending Results</div></div>
+        <div class="card c4"><div class="num" id="d-revenue">Rs 0</div><div class="lbl">Total Revenue</div></div>
+      </div>
+      <h3 class="sec">Recent Patients</h3>
+      <table id="dash-table"><thead><tr><th>MR No</th><th>Name</th><th>Age/Gender</th><th>Phone</th><th>Reg Date</th><th>Last Test</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <!-- NEW PATIENT + ORDER -->
+    <div class="page" id="page-neworder">
+      <h2 class="page-title">New Patient + Order <span class="muted">(ek hi page pe sab)</span></h2>
+      <div class="panel">
+        <h3 class="sec" style="margin-top:0">1. Patient Details</h3>
+        <label>Patient Name *</label><input id="p-name" placeholder="e.g. Ali Raza">
+        <div class="grid2">
+          <div><label>Age</label><input id="p-age" placeholder="e.g. 32"></div>
+          <div><label>Gender</label><select id="p-gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+        </div>
+        <div class="grid2">
+          <div><label>Phone</label><input id="p-phone" placeholder="03xx-xxxxxxx"></div>
+          <div><label>Referred By (Doctor)</label><input id="p-ref" placeholder="optional"></div>
+        </div>
+        <label>Address</label><input id="p-address" placeholder="optional">
+      </div>
+      <div class="panel">
+        <h3 class="sec" style="margin-top:0">2. Select Tests <span class="sel-count" id="selCount">0 selected</span></h3>
+        <div class="cat-tabs" id="catTabs"></div>
+        <div id="t-list"></div>
+        <div class="total-bar">Total: <span id="t-total">Rs 0</span></div>
+        <button class="btn green" onclick="savePatientAndOrder()">✔ Save Patient + Create Order</button>
+      </div>
+    </div>
+
+    <!-- EXISTING PATIENT ORDER -->
+    <div class="page" id="page-existing">
+      <h2 class="page-title">Existing Patient — New Test Order</h2>
+      <div class="panel">
+        <label>Find Patient (MR No ya naam likho)</label>
+        <div class="find-row rel">
+          <input id="e-search" placeholder="e.g. PRN-10001 ya Ali" oninput="existingSuggest(this.value)" autocomplete="off">
+          <div class="mr-suggest" id="e-suggest" style="display:none"></div>
+        </div>
+        <div id="e-selected" class="muted">Koi patient select nahi. Upar search karo.</div>
+        <div id="e-quick"></div>
+      </div>
+      <div class="panel">
+        <h3 class="sec" style="margin-top:0">Select Tests <span class="sel-count" id="selCount2">0 selected</span></h3>
+        <div class="cat-tabs" id="catTabs2"></div>
+        <div id="e-list"></div>
+        <div class="total-bar">Total: <span id="e-total">Rs 0</span></div>
+        <button class="btn green" onclick="createExistingOrder()">✔ Create Order</button>
+      </div>
+    </div>
+
+    <!-- RESULT ENTRY -->
+    <div class="page" id="page-results">
+      <h2 class="page-title">Result Entry</h2>
+      <div class="panel">
+        <label>Select Pending Test</label>
+        <select id="r-select" onchange="loadResultForm()"></select>
+        <div id="r-form"></div>
+        <button class="btn green" onclick="saveResult()">✔ Save Result</button>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <h2 class="page-title">Reports & Print</h2>
+      <div class="panel">
+        <label>Select Completed Test</label>
+        <select id="rep-select"></select><br>
+        <button class="btn orange" onclick="printReport()">🖨 Print / Save as PDF</button>
+        <p class="muted" style="margin-top:12px">Print window khulega — destination mein "Save as PDF" chuno ya printer select karo.</p>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <h2 class="page-title">Patient History</h2>
+      <div class="panel">
+        <label>Search Patient (MR No ya naam)</label>
+        <div class="find-row rel">
+          <input id="h-search" placeholder="e.g. PRN-10001 ya Ali" oninput="historySuggest(this.value)" autocomplete="off">
+          <div class="mr-suggest" id="h-suggest" style="display:none"></div>
+        </div>
+      </div>
+      <table id="h-table"><thead><tr><th>Date</th><th>Test</th><th>Status</th><th>Invoice</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <!-- BILLING -->
+    <div class="page" id="page-billing">
+      <h2 class="page-title">Billing</h2>
+      <table id="b-table"><thead><tr><th>Invoice</th><th>Patient</th><th>Tests</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <!-- TEST PRICES -->
+    <div class="page" id="page-tests">
+      <h2 class="page-title">Test Price List</h2>
+      <div class="panel" style="padding:14px">
+        <label style="margin-top:0">Prices change karne ke liye value edit karo, phir Save dabao</label>
+        <div id="price-list"></div>
+        <button class="btn green" onclick="savePrices()">✔ Save Prices</button>
+      </div>
+    </div>
+
+    <!-- BACKUP -->
+    <div class="page" id="page-backup">
+      <h2 class="page-title">Backup / Restore</h2>
+      <div class="panel" style="max-width:560px">
+        <p class="muted">Saara data is browser mein save hota hai. Time to time backup file download kar ke safe rakh lo (email/USB).</p>
+        <button class="btn green" onclick="exportBackup()">⬇ Download Backup File</button>
+        <br><br>
+        <label>Backup Restore karo (file chuno)</label>
+        <input type="file" id="importFile" accept=".json" onchange="importBackup(this)">
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <h2 class="page-title">Settings</h2>
+      <div class="panel" style="max-width:560px">
+        <label>Lab Name</label><input id="s-name">
+        <label>Subtitle</label><input id="s-sub">
+        <label>Address</label><input id="s-addr">
+        <label>Phone</label><input id="s-phone">
+        <label>Website</label><input id="s-web">
+        <label>Doctors (har line ek: Naam, Qualification)</label>
+        <textarea id="s-docs" rows="4" style="max-width:430px"></textarea>
+        <button class="btn green" onclick="saveSettings()">✔ Save Settings</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PRINT AREA -->
+<div id="printArea"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= DATA LAYER (localStorage) ================= */
+const DB_KEY = 'gatechlab_db_v1';
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function db() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(DB_KEY)); } catch(e) {}
+  if (!d) d = { patients:[], invoices:[], results:[], prices:{}, settings:defaultSettings(), counters:{p:0,i:0} };
+  return d;
+}
+function save(d) { localStorage.setItem(DB_KEY, JSON.stringify(d)); }
+
+function defaultSettings() {
+  return {
+    lab_name: "GA TECH LAB", lab_sub: "Diagnostic Laboratory",
+    address: "Main Road, Gujranwala", phone: "0300-4727217", website: "www.gatechlab.com",
+    doctors: "Dr. Ali Raza, M.B.B.S, M.Phil (UK)\nDr. Sara Khan, M.B.B.S, M.Phil (UK)\nDr. Imran Sheikh, M.B.B.S, M.Phil (UK)"
+  };
+}
+
+/* ================= TEST PANELS ================= */
+/* price = default; user can change in Test Prices page */
+const PANELS = {
+  "CBC (Complete Blood Count)": { cat:"Hematology", price:600, title:"HEMATOLOGY REPORT (CBC)", rows:[
+    ["","Haemoglobin (HB)|12.0-15.0|g/dl","HCT (PCV)|30.0-45.0|%","RBC Count|3.5-5.5|10^6/ul","MCV|70.0-95.0|fl","MCH|25.0-32.0|pg","MCHC|26.0-36.0|g/dl","Platelets Count|150.0-450.0|10^3/ul"],
+    ["Leucocytes","TLC (WBC)|4.0-11.0|10^3/ul"],
+    ["DLC","Neutrophils|50.0-60.0|%","Lymphocytes|30.0-50.0|%","Monocytes|2.0-10.0|%","Eosinophils|2.0-5.0|%","Basophils|2.0-5.0|%"]]},
+  "ESR": { cat:"Hematology", price:300, title:"ERYTHROCYTE SEDIMENTATION RATE (ESR)", rows:[
+    ["","ESR (1st Hour)|0-20|mm/hr"]]},
+  "BT / CT": { cat:"Hematology", price:300, title:"BLEEDING TIME / CLOTTING TIME", rows:[
+    ["","Bleeding Time|2-6|minutes","Clotting Time|5-10|minutes"]]},
+  "MP (Malaria)": { cat:"Hematology", price:300, title:"MALARIA PARASITE (MP)", rows:[
+    ["","Malaria Parasite|Negative|","Species|-|"]]},
+  "Blood Group + Rh": { cat:"Hematology", price:300, title:"BLOOD GROUPING & Rh", rows:[
+    ["","Blood Group|-|","Rh Factor|-|"]]},
+  "Dengue NS1": { cat:"Serology", price:700, title:"DENGUE NS1 ANTIGEN", rows:[
+    ["","Dengue NS1 Antigen|Negative|"]]},
+  "Dengue IgG / IgM": { cat:"Serology", price:900, title:"DENGUE ANTIBODIES (IgG / IgM)", rows:[
+    ["","Dengue IgG|Negative|","Dengue IgM|Negative|"]]},
+  "Widal Test (Typhoid)": { cat:"Serology", price:400, title:"WIDAL TEST (TYPHOID)", rows:[
+    ["","Salmonella Typhi 'O'|Less than 1:40|","Salmonella Typhi 'H'|Less than 1:40|","Salmonella Paratyphi 'AH'|Less than 1:40|","Salmonella Paratyphi 'BH'|Less than 1:40|"]]},
+  "Typhidot (IgG/IgM)": { cat:"Serology", price:800, title:"TYPHIDOT (IgG / IgM)", rows:[
+    ["","Typhidot IgG|Negative|","Typhidot IgM|Negative|"]]},
+  "HBsAg (Hepatitis B)": { cat:"Serology", price:500, title:"HBsAg (HEPATITIS B)", rows:[
+    ["","HBsAg|Negative|"]]},
+  "Anti HCV (Hepatitis C)": { cat:"Serology", price:700, title:"ANTI HCV (HEPATITIS C)", rows:[
+    ["","Anti HCV|Negative|"]]},
+  "HIV": { cat:"Serology", price:500, title:"HIV I & II", rows:[
+    ["","HIV I & II|Negative|"]]},
+  "CRP": { cat:"Serology", price:500, title:"C-REACTIVE PROTEIN (CRP)", rows:[
+    ["","CRP|Less than 6|mg/L"]]},
+  "RA Factor": { cat:"Serology", price:500, title:"RHEUMATOID FACTOR", rows:[
+    ["","RA Factor|Negative|"]]},
+  "ASO Titre": { cat:"Serology", price:500, title:"ASO TITRE", rows:[
+    ["","ASO Titre|Less than 200|IU/ml"]]},
+  "Pregnancy Test (hCG)": { cat:"Serology", price:500, title:"PREGNANCY TEST (URINE hCG)", rows:[
+    ["","Urine Pregnancy Test|Negative|"]]},
+  "FBS (Blood Sugar Fasting)": { cat:"Biochemistry", price:300, title:"BLOOD SUGAR (FASTING)", rows:[
+    ["","Fasting Blood Sugar|70-100|mg/dL"]]},
+  "RBS (Blood Sugar Random)": { cat:"Biochemistry", price:300, title:"BLOOD SUGAR (RANDOM)", rows:[
+    ["","Random Blood Sugar|70-140|mg/dL"]]},
+  "HbA1c": { cat:"Biochemistry", price:1200, title:"HbA1c (GLYCATED HEMOGLOBIN)", rows:[
+    ["","HbA1c|4.0-6.0|%"]]},
+  "Lipid Profile": { cat:"Biochemistry", price:800, title:"LIPID PROFILE", rows:[
+    ["","Total Lipids|400-1000|mg/dL","Total Cholesterol|0-200|mg/dL","Triglycerides|0-150|mg/dL","HDL Cholesterol|35-65|mg/dL","VLDL Cholesterol|0-30|mg/dL","LDL Cholesterol|0-130|mg/dL"]]},
+  "LFT (Liver Function)": { cat:"Biochemistry", price:900, title:"LIVER FUNCTION TEST (LFT)", rows:[
+    ["","Bilirubin Total|0.2-1.2|mg/dL","Bilirubin Direct|0.0-0.3|mg/dL","SGPT (ALT)|0-41|U/L","SGOT (AST)|0-40|U/L","Alkaline Phosphatase|44-147|U/L","Total Protein|6.0-8.3|g/dL","Albumin|3.5-5.0|g/dL","Globulin|2.0-3.5|g/dL"]]},
+  "RFT (Renal Function)": { cat:"Biochemistry", price:900, title:"RENAL FUNCTION TEST (RFT)", rows:[
+    ["","Urea|15-40|mg/dL","Blood Urea Nitrogen (BUN)|7-20|mg/dL","Creatinine|0.6-1.3|mg/dL","Uric Acid|3.5-7.2|mg/dL"]]},
+  "Electrolytes": { cat:"Biochemistry", price:600, title:"SERUM ELECTROLYTES", rows:[
+    ["","Sodium (Na+)|135-145|mmol/L","Potassium (K+)|3.5-5.1|mmol/L","Chloride (Cl-)|98-107|mmol/L"]]},
+  "Calcium": { cat:"Biochemistry", price:400, title:"SERUM CALCIUM", rows:[
+    ["","Serum Calcium|8.6-10.3|mg/dL"]]},
+  "Thyroid Profile (T3 T4 TSH)": { cat:"Biochemistry", price:1400, title:"THYROID PROFILE", rows:[
+    ["","T3 Total|0.8-2.0|ng/mL","T4 Total|5.1-14.1|ug/dL","TSH|0.27-4.2|uIU/mL"]]},
+  "Urine Routine": { cat:"Urine/Stool", price:400, title:"URINE ROUTINE EXAMINATION", rows:[
+    ["Physical","Colour|-|","Appearance|-|","Reaction (pH)|4.5-8.0|","Specific Gravity|1.005-1.030|"],
+    ["Chemical","Sugar|Nil|","Albumin|Nil|","Ketone Bodies|Nil|","Bilirubin|Negative|","Urobilinogen|Normal|"],
+    ["Microscopy","Pus Cells|0-4|/HPF","RBCs|0-2|/HPF","Epithelial Cells|Few|/HPF","Casts|Nil|","Crystals|Nil|","Bacteria|Nil|"]]},
+  "Stool Routine": { cat:"Urine/Stool", price:400, title:"STOOL ROUTINE EXAMINATION", rows:[
+    ["Physical","Colour|-|","Consistency|-|","Mucus|Absent|","Blood|Absent|"],
+    ["Chemical","Occult Blood|Negative|","Reducing Substances|Negative|"],
+    ["Microscopy","Pus Cells|0-2|/HPF","RBCs|Nil|/HPF","Ova / Cysts|Not Seen|","Helminths|Not Seen|","Yeast Cells|Not Seen|"]]},
+  "Sputum AFB": { cat:"Urine/Stool", price:400, title:"SPUTUM FOR AFB", rows:[
+    ["","AFB (Ziehl-Neelsen)|Not Seen|","Gram Stain|-|"]]},
+  "Semen Analysis": { cat:"Urine/Stool", price:1000, title:"SEMEN ANALYSIS", rows:[
+    ["Physical","Volume|2-5|ml","Colour|Grey-White|","Liquefaction Time|20-30|minutes","pH|7.2-8.0|"],
+    ["Microscopy","Sperm Count|15-250|million/ml","Motility (Active)|50-100|%","Motility (Sluggish)|10-50|%","Immotile Sperms|Less than 50|%","Pus Cells|0-5|/HPF","Morphology (Normal)|30-100|%"]]},
+  "Covid-19 (Rapid)": { cat:"Serology", price:800, title:"COVID-19 RAPID ANTIGEN TEST", rows:[
+    ["","Covid-19 Antigen|Negative|"]]},
+};
+function getPrice(key) {
+  const d = db();
+  if (d.prices[key] !== undefined) return d.prices[key];
+  return PANELS[key].price;
+}
+
+/* helpers */
+function flagFor(val, rng) {
+  if (!val) return '';
+  if (!rng || rng === '-' || !rng.includes('-')) {
+    // qualitative: compare with Negative / Nil / Not Seen / Absent
+    const v = val.toLowerCase();
+    if (['negative','nil','not seen','absent','normal'].includes(v)) return 'Normal';
+    if (rng && v === rng.toLowerCase()) return 'Normal';
+    if (/positive|present|seen|many|few\s*\+/.test(v)) return 'Abnormal';
+    return '';
+  }
+  try {
+    const [lo, hi] = rng.split('-').map(Number);
+    const v = parseFloat(val);
+    if (isNaN(v)) return '';
+    if (v < lo) return 'Low';
+    if (v > hi) return 'High';
+    return 'Normal';
+  } catch(e) { return ''; }
+}
+function nextMrNo(d) { return 'PRN-' + (10001 + d.counters.p); }
+function nextInvoiceNo(d) {
+  const dt = new Date(), mm = String(dt.getMonth()+1).padStart(2,'0'), yy = String(dt.getFullYear()).slice(2);
+  return 'PM-' + mm + yy + '-' + String(++d.counters.i).padStart(4,'0');
+}
+function todayStr() { return new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'numeric'}) + ' ' + new Date().toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}); }
+
+function toast(msg, bad) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.background = bad ? '#c0392b' : '#1e8449';
+  t.style.display = 'block';
+  setTimeout(()=>t.style.display='none', 2800);
+}
+
+/* ================= LOGIN ================= */
+function doLogin() {
+  const u = $('li-user').value.trim(), p = $('li-pass').value.trim();
+  if (u === 'admin' && p === 'admin123') {
+    $('loginScreen').style.display = 'none';
+    $('app').style.display = 'block';
+    loadDashboard(); buildTestLists(); loadResultSelect(); loadReportSelect(); loadBilling(); loadHistoryQuick(); loadSettingsForm(); loadPriceList();
+  } else { toast('Ghalat username ya password. (admin / admin123)', true); }
+}
+function logout() { location.reload(); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && $('loginScreen').style.display !== 'none') doLogin();
+});
+
+/* ================= NAV ================= */
+document.querySelectorAll('.sidebar a[data-page]').forEach(a => {
+  a.onclick = () => {
+    document.querySelectorAll('.sidebar a').forEach(x=>x.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    $('page-'+a.dataset.page).classList.add('active');
+    ({dashboard:loadDashboard, results:loadResultSelect, reports:loadReportSelect, billing:loadBilling, tests:loadPriceList, history:loadHistoryQuick})[a.dataset.page]?.();
+  };
+});
+
+/* ================= DASHBOARD ================= */
+function loadDashboard() {
+  const d = db();
+  const today = todayStr().slice(0,10);
+  $('d-total').textContent = d.patients.length;
+  $('d-today').textContent = d.patients.filter(p=>p.reg.startsWith(today)).length;
+  $('d-pending').textContent = d.results.filter(r=>r.status==='Pending').length;
+  $('d-revenue').textContent = 'Rs ' + d.invoices.reduce((s,i)=>s+i.total,0).toLocaleString();
+  const tb = $('dash-table').querySelector('tbody');
+  tb.innerHTML = d.patients.slice(-12).reverse().map(p => {
+    const last = d.results.filter(r=>r.pid===p.id).slice(-1)[0];
+    return `<tr><td>${esc(p.mr)}</td><td>${esc(p.name)}</td><td>${esc(p.age)} / ${esc(p.gender)}</td><td>${esc(p.phone)}</td><td>${esc(p.reg)}</td><td>${last?esc(last.test):'-'}</td></tr>`;
+  }).join('');
+}
+
+/* ================= TEST LISTS (new order + existing order) ================= */
+let currentCat = 'All';
+function categories() { return ['All', ...new Set(Object.values(PANELS).map(p=>p.cat))]; }
+function buildTestLists() {
+  const cats = categories();
+  const mk = (tabsId, listId, countId, totalId, prefix) => {
+    $(tabsId).innerHTML = cats.map(c => `<button class="cat-tab ${c==='All'?'active':''}" onclick="setCat('${c}','${prefix}')">${c}</button>`).join('');
+    renderTests(listId, countId, totalId, prefix);
+  };
+  mk('catTabs','t-list','selCount','t-total','n');
+  mk('catTabs2','e-list','selCount2','e-total','e');
+}
+function setCat(c, prefix) {
+  currentCat = c;
+  document.querySelectorAll('#catTabs .cat-tab, #catTabs2 .cat-tab').forEach(b => b.classList.toggle('active', b.textContent===c));
+  const ids = prefix==='n' ? ['t-list','selCount','t-total'] : ['e-list','selCount2','e-total'];
+  renderTests(ids[0], ids[1], ids[2], prefix);
+}
+function renderTests(listId, countId, totalId, prefix) {
+  $(listId).innerHTML = Object.entries(PANELS)
+    .filter(([k,p]) => currentCat==='All' || p.cat===currentCat)
+    .map(([k,p]) => `<label class="test-check"><input type="checkbox" onchange="recalc('${prefix}')" value="${esc(k)}"> ${esc(k)} <span class="muted">(${esc(p.cat)})</span><span class="price">Rs ${getPrice(k)}</span></label>`).join('');
+  recalc(prefix);
+}
+function recalc(prefix) {
+  const listId = prefix==='n' ? 't-list' : 'e-list';
+  const checked = [...document.querySelectorAll('#'+listId+' input:checked')];
+  let total = 0; checked.forEach(cb => total += getPrice(cb.value));
+  if (prefix==='n') { $('t-total').textContent='Rs '+total.toLocaleString(); $('selCount').textContent=checked.length+' selected'; }
+  else { $('e-total').textContent='Rs '+total.toLocaleString(); $('selCount2').textContent=checked.length+' selected'; }
+}
+
+/* ================= SAVE PATIENT + ORDER ================= */
+function savePatientAndOrder() {
+  const name = $('p-name').value.trim();
+  if (!name) { toast('Patient ka naam likho.', true); return; }
+  const tests = [...document.querySelectorAll('#t-list input:checked')].map(cb=>cb.value);
+  const d = db();
+  const id = Date.now();
+  const mr = nextMrNo(d);
+  d.counters.p++;
+  d.patients.push({ id, mr, name, age:$('p-age').value.trim(), gender:$('p-gender').value, phone:$('p-phone').value.trim(), ref:$('p-ref').value.trim(), address:$('p-address').value.trim(), reg:todayStr() });
+  if (tests.length) createOrderFor(d, id, tests);
+  save(d);
+  toast('✔ ' + name + ' save ho gaya. MR No: ' + mr + (tests.length ? ' | Invoice bana di.' : ''));
+  ['p-name','p-age','p-phone','p-ref','p-address'].forEach(i=>$(i).value='');
+  document.querySelectorAll('#t-list input:checked').forEach(cb=>cb.checked=false);
+  recalc('n');
+  loadDashboard(); loadResultSelect(); loadBilling(); loadHistoryQuick();
+}
+function createOrderFor(d, pid, tests) {
+  const inv = nextInvoiceNo(d);
+  const total = tests.reduce((s,t)=>s+getPrice(t),0);
+  d.invoices.push({ id:Date.now()+Math.floor(Math.random()*1000), inv, pid, tests, total, status:'Pending', date:todayStr() });
+  tests.forEach((t,i) => d.results.push({ id:Date.now()+i+Math.floor(Math.random()*1000), pid, test:t, inv, status:'Pending', date:'', values:{} }));
+}
+
+/* ================= EXISTING PATIENT ORDER ================= */
+let selExisting = null;
+function existingSuggest(q) {
+  const box = $('e-suggest');
+  if (!q) { box.style.display='none'; return; }
+  const d = db();
+  const list = d.patients.filter(p => p.mr.toLowerCase().includes(q.toLowerCase()) || p.name.toLowerCase().includes(q.toLowerCase())).slice(-8).reverse();
+  box.innerHTML = list.map(p=>`<div onclick="pickExisting(${p.id})">${esc(p.mr)} — ${esc(p.name)} (${esc(p.age)}/${esc(p.gender)})</div>`).join('');
+  box.style.display = list.length ? 'block' : 'none';
+}
+function pickExisting(id) {
+  const d = db();
+  selExisting = d.patients.find(p=>p.id===id);
+  $('e-selected').innerHTML = `<b style="color:#1e8449">✔ ${esc(selExisting.name)} (${esc(selExisting.mr)})</b>`;
+  $('e-suggest').style.display='none';
+  $('e-search').value = selExisting.mr;
+}
+function loadHistoryQuick() {
+  const d = db();
+  $('e-quick').innerHTML = d.patients.slice(-6).reverse().map(p=>`<span class="quick-patient" onclick="pickExisting(${p.id})">${esc(p.name)} (${esc(p.mr)})</span>`).join('');
+}
+function createExistingOrder() {
+  if (!selExisting) { toast('Pehle patient search kar ke select karo.', true); return; }
+  const tests = [...document.querySelectorAll('#e-list input:checked')].map(cb=>cb.value);
+  if (!tests.length) { toast('Kam az kam ek test select karo.', true); return; }
+  const d = db();
+  createOrderFor(d, selExisting.id, tests);
+  save(d);
+  toast('✔ Order ban gaya — ' + selExisting.name);
+  document.querySelectorAll('#e-list input:checked').forEach(cb=>cb.checked=false);
+  recalc('e');
+  selExisting = null; $('e-selected').textContent = 'Koi patient select nahi.';
+  loadDashboard(); loadResultSelect(); loadBilling();
+}
+
+/* ================= RESULT ENTRY ================= */
+function loadResultSelect() {
+  const d = db();
+  const pend = d.results.filter(r=>r.status==='Pending').slice().reverse();
+  $('r-select').innerHTML = '<option value="">— Select —</option>' + pend.map((r,i) => {
+    const p = d.patients.find(x=>x.id===r.pid);
+    const idx = d.results.indexOf(r);
+    return `<option value="${idx}">${esc(p?p.mr:'')} | ${esc(p?p.name:'')} | ${esc(r.test)} | ${esc(r.inv)}</option>`;
+  }).join('');
+  $('r-form').innerHTML = '';
+}
+function loadResultForm() {
+  const idx = $('r-select').value;
+  $('r-form').innerHTML = '';
+  if (idx==='') return;
+  const d = db(), r = d.results[+idx], panel = PANELS[r.test];
+  let html = '';
+  panel.rows.forEach(([sec, ...tests]) => {
+    if (sec) html += `<div class="section-h">${esc(sec)}</div>`;
+    tests.forEach(t => {
+      const [name, rng, unit] = t.split('|');
+      const val = r.values[name] || '';
+      html += `<div class="result-row"><span class="tname">${esc(name)}</span><span class="trange">${esc(rng)}</span><span class="tunit">${esc(unit)}</span><input class="rval" data-test="${esc(name)}" data-rng="${esc(rng)}" value="${esc(val)}" placeholder="—" oninput="showFlag(this)"><span class="fl" id="fl_${esc(name).replace(/[^a-zA-Z0-9]/g,'_')}">${flagFor(val,rng)}</span></div>`;
+    });
+  });
+  $('r-form').innerHTML = html;
+}
+function showFlag(input) {
+  const flag = flagFor(input.value, input.dataset.rng);
+  const el = $('fl_' + input.dataset.test.replace(/[^a-zA-Z0-9]/g,'_'));
+  if (el) el.innerHTML = flag==='High'?'<span class="flag-h">▲ HIGH</span>':flag==='Low'?'<span class="flag-l">▼ LOW</span>':(flag==='Normal'?'✔':flag==='Abnormal'?'<span class="flag-h">ABN</span>':'');
+}
+function saveResult() {
+  const idx = $('r-select').value;
+  if (idx==='') { toast('Pehle pending test select karo.', true); return; }
+  const d = db(), r = d.results[+idx];
+  document.querySelectorAll('.rval').forEach(i => { if (i.value.trim()!=='') r.values[i.dataset.test] = i.value.trim(); });
+  r.status = 'Completed';
+  r.date = todayStr();
+  save(d);
+  toast('✔ Result save ho gaya!');
+  loadResultSelect(); loadReportSelect(); loadDashboard(); loadBilling();
+}
+
+/* ================= REPORTS & PRINT ================= */
+function loadReportSelect() {
+  const d = db();
+  const comp = d.results.map((r,i)=>({r,i})).filter(x=>x.r.status==='Completed').reverse();
+  $('rep-select').innerHTML = '<option value="">— Select —</option>' + comp.map(x => {
+    const p = d.patients.find(y=>y.id===x.r.pid);
+    return `<option value="${x.i}">${esc(p?p.mr:'')} | ${esc(p?p.name:'')} | ${esc(x.r.test)} | ${esc(x.r.date)}</option>`;
+  }).join('');
+}
+function printReport() {
+  const idx = $('rep-select').value;
+  if (idx==='') { toast('Pehle completed test select karo.', true); return; }
+  const d = db(), r = d.results[+idx];
+  const p = d.patients.find(x=>x.id===r.pid) || {mr:'',name:'',age:'',gender:'',phone:''};
+  const s = d.settings, panel = PANELS[r.test];
+  let rows = '', ri = 0;
+  panel.rows.forEach(([sec, ...tests]) => {
+    if (sec) { rows += `<tr class="secrow"><td colspan="4">${esc(sec)}</td></tr>`; ri=0; }
+    tests.forEach(t => {
+      const [name, rng, unit] = t.split('|');
+      const val = r.values[name] || '—';
+      const flag = flagFor(val, rng);
+      const cls = flag==='High'?'hl':flag==='Low'?'ll':'';
+      const mark = flag==='High'?' ▲':flag==='Low'?' ▼':'';
+      rows += `<tr><td>${esc(name)}</td><td>${esc(rng)}</td><td>${esc(unit)}</td><td class="${cls}">${esc(val)}${mark}</td></tr>`;
+    });
+  });
+  const docs = (s.doctors||'').split('\n').filter(x=>x.trim()).map(l => {
+    const parts = l.split(',');
+    return `<div><b>${esc(parts[0].trim())}</b><span>${esc(parts.slice(1).join(',').trim())}</span></div>`;
+  }).join('');
+  $('printArea').innerHTML = `
+  <div class="rep">
+    <div class="rep-head">
+      <h1>${esc(s.lab_name)}</h1>
+      <div class="sub">${esc(s.lab_sub)}</div>
+    </div>
+    <div class="rep-info">
+      <div>
+        <div><b>Patient:</b> ${esc(p.name)}</div>
+        <div><b>Age / Sex:</b> ${esc(p.age)} / ${esc(p.gender)}</div>
+        <div><b>MR#:</b> ${esc(p.mr)}</div>
+        <div><b>Invoice:</b> ${esc(r.inv)}</div>
+      </div>
+      <div>
+        <div><b>Register Date:</b> ${esc(p.reg)}</div>
+        <div><b>Phone:</b> ${esc(p.phone||'-')}</div>
+        <div><b>Referred By:</b> ${esc(p.ref||'-')}</div>
+        <div><b>Result Date:</b> ${esc(r.date)}</div>
+      </div>
+    </div>
+    <hr>
+    <div class="rep-title">${esc(panel.title)}</div>
+    <table>
+      <thead><tr><th style="width:34%">TEST</th><th style="width:26%">NORMAL VALUE</th><th style="width:16%">UNITS</th><th style="width:24%">RESULT</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="rep-foot">Electronically Verified Report, No Signature(s) required. This report is not valid for any court.</div>
+    <div class="rep-docs">${docs}</div>
+    <div class="rep-bottom">${esc(s.address)} &nbsp;|&nbsp; Phone: ${esc(s.phone)} &nbsp;|&nbsp; ${esc(s.website)}</div>
+  </div>`;
+  window.print();
+}
+
+/* ================= HISTORY ================= */
+function historySuggest(q) {
+  const box = $('h-suggest');
+  if (!q) { box.style.display='none'; return; }
+  const d = db();
+  const list = d.patients.filter(p => p.mr.toLowerCase().includes(q.toLowerCase()) || p.name.toLowerCase().includes(q.toLowerCase())).slice(-8).reverse();
+  box.innerHTML = list.map(p=>`<div onclick="showHistory(${p.id})">${esc(p.mr)} — ${esc(p.name)}</div>`).join('');
+  box.style.display = list.length ? 'block' : 'none';
+}
+function showHistory(pid) {
+  $('h-suggest').style.display='none';
+  const d = db();
+  const rows = d.results.filter(r=>r.pid===pid).reverse();
+  $('h-table').querySelector('tbody').innerHTML = rows.map(r =>
+    `<tr><td>${esc(r.date||'-')}</td><td>${esc(r.test)}</td><td><span class="badge ${r.status==='Completed'?'completed':'pending'}">${esc(r.status)}</span></td><td>${esc(r.inv)}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="muted">Koi record nahi.</td></tr>';
+}
+
+/* ================= BILLING ================= */
+function loadBilling() {
+  const d = db();
+  $('b-table').querySelector('tbody').innerHTML = d.invoices.slice().reverse().map(i => {
+    const p = d.patients.find(x=>x.id===i.pid) || {name:'-'};
+    return `<tr><td>${esc(i.inv)}</td><td>${esc(p.name)}</td><td>${esc(i.tests.join(', '))}</td><td>Rs ${i.total.toLocaleString()}</td><td><span class="badge ${i.status==='Paid'?'paid':'pending'}">${esc(i.status)}</span></td><td>${esc(i.date)}</td><td>${i.status!=='Paid'?`<button class="btn small green" onclick="markPaid(${i.id})">Paid karo</button>`:''}</td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="muted">Abhi koi invoice nahi.</td></tr>';
+}
+function markPaid(id) {
+  const d = db();
+  const inv = d.invoices.find(i=>i.id===id);
+  if (inv) inv.status = 'Paid';
+  save(d); toast('Invoice paid!'); loadBilling(); loadDashboard();
+}
+
+/* ================= TEST PRICES ================= */
+function loadPriceList() {
+  const d = db();
+  $('price-list').innerHTML = Object.entries(PANELS).map(([k,p]) =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed #eee;max-width:560px"><span style="font-size:13.5px">${esc(k)} <span class="muted">(${esc(p.cat)})</span></span> <span><input type="number" class="price-in" data-k="${esc(k)}" value="${getPrice(k)}" style="width:90px;text-align:right"> Rs</span></div>`).join('');
+}
+function savePrices() {
+  const d = db();
+  document.querySelectorAll('.price-in').forEach(i => d.prices[i.dataset.k] = +i.value || 0);
+  save(d); toast('✔ Prices save ho gayin!'); buildTestLists();
+}
+
+/* ================= BACKUP ================= */
+function exportBackup() {
+  const blob = new Blob([localStorage.getItem(DB_KEY)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gatechlab_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+function importBackup(input) {
+  const f = input.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!d.patients || !d.invoices) throw 0;
+      save(d);
+      toast('✔ Backup restore ho gaya!');
+      loadDashboard(); loadBilling(); loadResultSelect(); loadReportSelect();
+    } catch(err) { toast('Ye backup file ghalat hai.', true); }
+  };
+  reader.readAsText(f);
+}
+
+/* ================= SETTINGS ================= */
+function loadSettingsForm() {
+  const d = db(), s = d.settings || defaultSettings();
+  $('s-name').value=s.lab_name; $('s-sub').value=s.lab_sub; $('s-addr').value=s.address;
+  $('s-phone').value=s.phone; $('s-web').value=s.website; $('s-docs').value=s.doctors;
+}
+function saveSettings() {
+  const d = db();
+  d.settings = { lab_name:$('s-name').value, lab_sub:$('s-sub').value, address:$('s-addr').value,
+                 phone:$('s-phone').value, website:$('s-web').value, doctors:$('s-docs').value };
+  save(d); toast('✔ Settings save ho gayi!');
+}
+
+/* ================= PWA / OFFLINE ================= */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
+function installApp() {
+  if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+  else alert('Is page ko browser menu se "Add to Home Screen" / "Install App" kar do — phir ye offline bhi chalega.');
+}
+</script>
+</body>
+</html>
