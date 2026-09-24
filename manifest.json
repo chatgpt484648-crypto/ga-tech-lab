@@ -1,0 +1,10 @@
+{
+  "name": "GA TECH LAB - Laboratory Management System",
+  "short_name": "GA TECH LAB",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1a5276",
+  "description": "Offline-capable lab management: patients, tests, results, reports, billing",
+  "icons": []
+}
